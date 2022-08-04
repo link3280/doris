@@ -18,6 +18,8 @@
 #include "vec/exec/scan/vscan_node.h"
 #include "vec/exec/scan/vscanner.h"
 
+#include "runtime/runtime_filter_mgr.h"
+
 namespace doris::vectorized {
 
 Status VScanNode::init(const TPlanNode &tnode, RuntimeState *state) {
@@ -49,8 +51,6 @@ Status VScanNode::prepare(RuntimeState* state) {
     SCOPED_CONSUME_MEM_TRACKER(mem_tracker());
 
     RETURN_IF_ERROR(_init_profile());
-    _tuple_desc = state->desc_tbl().get_tuple_descriptor(_tuple_id);
-    DCHECK(_tuple_desc != nullptr);
 
     // init profile for runtime filter
     for (size_t i = 0; i < _runtime_filter_descs.size(); ++i) {
@@ -127,29 +127,17 @@ Status VScanNode::_acquire_runtime_filter() {
             std::list<ExprContext*> expr_context;
             RETURN_IF_ERROR(runtime_filter->get_push_expr_ctxs(&expr_context));
             _runtime_filter_ctxs[i].apply_mark = true;
-            _runtime_filter_ctxs[i].runtimefilter = runtime_filter;
+            _runtime_filter_ctxs[i].runtime_filter = runtime_filter;
             for (auto ctx : expr_context) {
                 ctx->prepare(_runtime_state, row_desc());
                 ctx->open(_runtime_state);
                 int index = _conjunct_ctxs.size();
                 _conjunct_ctxs.push_back(ctx);
-                _conjunctid_to_runtime_filter_ctxs[index] = &_runtime_filter_ctxs[i];
+                _conjunct_id_to_runtime_filter_ctxs[index] = &_runtime_filter_ctxs[i];
             }
         }
     }
 
-    return Status::OK();
-}
-
-Status VScanNode::_process_conjuncts() {
-    return Status::OK();
-}
-
-Status VScanNode::_init_scanners() {
-    return Status::OK();
-}
-
-Status VScanNode::_start_scanners() {
     return Status::OK();
 }
 

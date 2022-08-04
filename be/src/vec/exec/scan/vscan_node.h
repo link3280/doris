@@ -77,7 +77,7 @@ protected:
     // Different data sources can implement this method to determine whether a predicate
     // can be processed by the data source
     virtual PushdownType _is_conjuncts_acceptable(ExprContext *ctx) {
-        return PushdownType::REJECT
+        return PushdownType::REJECT;
     }
 
 protected:
@@ -104,7 +104,6 @@ protected:
     std::vector<std::unique_ptr<std::mutex>> _rf_locks;
     std::map<int, RuntimeFilterContext *> _conjunct_id_to_runtime_filter_ctxs;
 
-    const TupleDescriptor *_tuple_desc;
     RuntimeState *_runtime_state;
 
     std::list<VScanner *> _scanners;
